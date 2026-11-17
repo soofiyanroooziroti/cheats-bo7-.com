@@ -1,18 +1,75 @@
 import EmblaCarousel, { type EmblaCarouselType } from 'embla-carousel';
 import Autoplay from 'embla-carousel-autoplay';
 
-export const HERO_AUTOPLAY_MS = 4000;
+export const HERO_AUTOPLAY_MS = 5000;
 
 const heroApis = new WeakMap<HTMLElement, EmblaCarouselType>();
 
 type AutoplayPlugin = ReturnType<typeof Autoplay>;
 
-type HeroProgressController = {
+type DotProgressController = {
+  refresh: (selectedIndex: number) => void;
+  setAutoplayPaused: (paused: boolean) => void;
   stop: () => void;
 };
 
-function applyProgressScale(progressEl: HTMLElement, scale: number) {
-  progressEl.style.transform = `scaleX(${Math.min(1, Math.max(0, scale))})`;
+function prefersReducedMotion() {
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+function createDotProgressController(wrapper: HTMLElement): DotProgressController {
+  const dotsRoot = wrapper.querySelector('[data-hero-embla-dots]');
+  if (!dotsRoot) {
+    return { refresh: () => undefined, setAutoplayPaused: () => undefined, stop: () => undefined };
+  }
+
+  wrapper.style.setProperty('--hero-autoplay-ms', `${HERO_AUTOPLAY_MS}ms`);
+
+  const dots = Array.from(dotsRoot.querySelectorAll<HTMLButtonElement>('[data-hero-embla-dot]'));
+  const progressBars = dots.map((dot) => dot.querySelector<HTMLElement>('[data-hero-embla-progress]'));
+  let autoplayPaused = false;
+
+  const restartProgress = (progress: HTMLElement) => {
+    progress.classList.remove('hero-embla-progress--running', 'hero-embla-progress--paused', 'hero-embla-progress--filled');
+    progress.style.removeProperty('width');
+    progress.style.removeProperty('transform');
+
+    if (prefersReducedMotion()) {
+      progress.classList.add('hero-embla-progress--filled');
+      return;
+    }
+
+    void progress.offsetWidth;
+    progress.classList.add('hero-embla-progress--running');
+    if (autoplayPaused) progress.classList.add('hero-embla-progress--paused');
+  };
+
+  const refresh = (selectedIndex: number) => {
+    dots.forEach((dot, i) => {
+      const active = i === selectedIndex;
+      dot.dataset.active = active ? 'true' : 'false';
+      dot.setAttribute('aria-selected', active ? 'true' : 'false');
+    });
+
+    progressBars.forEach((progress, i) => {
+      if (!progress) return;
+      progress.classList.remove('hero-embla-progress--running', 'hero-embla-progress--paused', 'hero-embla-progress--filled');
+      progress.style.removeProperty('width');
+      progress.style.removeProperty('transform');
+      if (i !== selectedIndex) return;
+      restartProgress(progress);
+    });
+  };
+
+  const setAutoplayPaused = (paused: boolean) => {
+    autoplayPaused = paused;
+    const selectedIndex = dots.findIndex((dot) => dot.dataset.active === 'true');
+    const progress = selectedIndex >= 0 ? progressBars[selectedIndex] : null;
+    if (!progress || prefersReducedMotion()) return;
+    progress.classList.toggle('hero-embla-progress--paused', paused);
+  };
+
+  return { refresh, setAutoplayPaused, stop: () => undefined };
 }
 
 function bindHeroThumbs(wrapper: HTMLElement, api: EmblaCarouselType) {
@@ -44,82 +101,34 @@ function bindHeroDots(
   wrapper: HTMLElement,
   api: EmblaCarouselType,
   autoplay: AutoplayPlugin | null,
-): HeroProgressController {
-  if (!autoplay) return { stop: () => undefined };
+): DotProgressController {
+  const progress = createDotProgressController(wrapper);
+  if (!autoplay) return progress;
+
   const dotsRoot = wrapper.querySelector('[data-hero-embla-dots]');
-  if (!dotsRoot) return { stop: () => undefined };
+  if (!dotsRoot) return progress;
 
   const dots = Array.from(dotsRoot.querySelectorAll<HTMLButtonElement>('[data-hero-embla-dot]'));
-  const progressBars = dots.map((dot) => dot.querySelector<HTMLElement>('[data-hero-embla-progress]'));
-  const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
-  let progressRaf = 0;
-
-  const stopProgressLoop = () => {
-    cancelAnimationFrame(progressRaf);
-    progressRaf = 0;
-  };
-
-  const tickProgress = () => {
-    const progress = progressBars[api.selectedScrollSnap()];
-    if (progress) {
-      if (motionPreference.matches) {
-        applyProgressScale(progress, 1);
-      } else if (autoplay.isPlaying()) {
-        const remaining = autoplay.timeUntilNext();
-        if (remaining !== null) {
-          const elapsed = HERO_AUTOPLAY_MS - remaining;
-          applyProgressScale(progress, elapsed / HERO_AUTOPLAY_MS);
-        }
-      }
-    }
-    progressRaf = requestAnimationFrame(tickProgress);
-  };
-
-  const startProgressLoop = () => {
-    stopProgressLoop();
-    progressRaf = requestAnimationFrame(tickProgress);
-  };
-
-  const syncProgress = () => {
-    const index = api.selectedScrollSnap();
-    progressBars.forEach((progress, i) => {
-      if (!progress) return;
-
-      progress.classList.remove('hero-embla-progress--running', 'hero-embla-progress--paused', 'hero-embla-progress--filled');
-
-      if (i !== index) {
-        applyProgressScale(progress, 0);
-        return;
-      }
-
-      if (motionPreference.matches) {
-        progress.classList.add('hero-embla-progress--filled');
-        applyProgressScale(progress, 1);
-        return;
-      }
-
-      applyProgressScale(progress, 0);
-    });
-  };
 
   const updateDots = () => {
-    const index = api.selectedScrollSnap();
-    dots.forEach((dot, i) => {
-      const active = i === index;
-      dot.dataset.active = active ? 'true' : 'false';
-      dot.setAttribute('aria-selected', active ? 'true' : 'false');
-    });
-    syncProgress();
+    progress.refresh(api.selectedScrollSnap());
   };
 
   const resetAutoplayTimer = () => {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    if (autoplay.isPlaying()) autoplay.reset();
+    if (prefersReducedMotion()) return;
+    if (autoplay.isPlaying()) autoplay.stop();
+    progress.setAutoplayPaused(true);
+    autoplay.reset();
+    if (!document.hidden) autoplay.play();
+    progress.setAutoplayPaused(false);
+    progress.refresh(api.selectedScrollSnap());
   };
 
   dots.forEach((dot) => {
     const index = Number(dot.getAttribute('data-hero-embla-dot'));
     dot.addEventListener('click', () => {
+      if (autoplay.isPlaying()) autoplay.stop();
+      progress.setAutoplayPaused(true);
       api.scrollTo(index);
       resetAutoplayTimer();
     });
@@ -129,9 +138,8 @@ function bindHeroDots(
   api.on('reInit', updateDots);
 
   updateDots();
-  startProgressLoop();
 
-  return { stop: stopProgressLoop };
+  return progress;
 }
 
 function bindArrows(
@@ -189,15 +197,18 @@ function bindHeroAutoplayPause(
   wrapper: HTMLElement,
   autoplay: AutoplayPlugin,
   reducedMotion: boolean,
+  progress: DotProgressController,
 ) {
   if (reducedMotion || wrapper.dataset.heroPauseBound === 'true') return;
   wrapper.dataset.heroPauseBound = 'true';
 
   const pause = () => {
     if (autoplay.isPlaying()) autoplay.stop();
+    progress.setAutoplayPaused(true);
   };
   const resume = () => {
     if (!document.hidden) autoplay.play();
+    progress.setAutoplayPaused(false);
   };
 
   wrapper.addEventListener('mouseenter', pause);
@@ -208,6 +219,14 @@ function bindHeroAutoplayPause(
     if (next instanceof Node && wrapper.contains(next)) return;
     resume();
   });
+
+  if (wrapper.dataset.heroVisibilityBound !== 'true') {
+    wrapper.dataset.heroVisibilityBound = 'true';
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) pause();
+      else resume();
+    });
+  }
 }
 
 function bindDragUX(viewport: HTMLElement, api: EmblaCarouselType) {
@@ -244,22 +263,25 @@ function bindDragUX(viewport: HTMLElement, api: EmblaCarouselType) {
   );
 }
 
-
 function initNativeHero(wrapper: HTMLElement, viewport: HTMLElement) {
   const slides = Array.from(viewport.querySelectorAll<HTMLElement>('[data-slot="carousel-item"]'));
-  const dots = Array.from(wrapper.querySelectorAll<HTMLButtonElement>('[data-hero-embla-dot]'));
   const thumbs = Array.from(wrapper.querySelectorAll<HTMLButtonElement>('[data-hero-embla-thumb]'));
+  const dots = Array.from(wrapper.querySelectorAll<HTMLButtonElement>('[data-hero-embla-dot]'));
   if (!slides.length) return;
+
   wrapper.dataset.nativeCarousel = 'true';
+  const progress = createDotProgressController(wrapper);
   let selected = 0;
+  let autoplayTimer = 0;
 
   const scrollToSlide = (index: number) => {
     selected = (index + slides.length) % slides.length;
     viewport.scrollTo({
       left: selected * viewport.clientWidth,
-      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
+      behavior: prefersReducedMotion() ? 'instant' : 'smooth',
     });
   };
+
   const update = () => {
     selected = Math.round(viewport.scrollLeft / Math.max(viewport.clientWidth, 1));
     [...dots, ...thumbs].forEach((button) => {
@@ -268,27 +290,71 @@ function initNativeHero(wrapper: HTMLElement, viewport: HTMLElement) {
       button.dataset.active = String(active);
       button.setAttribute('aria-selected', String(active));
     });
+    progress.refresh(selected);
   };
+
+  const pauseAutoplay = () => {
+    window.clearInterval(autoplayTimer);
+    autoplayTimer = 0;
+    progress.setAutoplayPaused(true);
+  };
+
+  const resetAutoplay = () => {
+    pauseAutoplay();
+    if (prefersReducedMotion()) return;
+    autoplayTimer = window.setInterval(() => {
+      if (document.hidden) return;
+      scrollToSlide(selected + 1);
+    }, HERO_AUTOPLAY_MS);
+    progress.setAutoplayPaused(false);
+    progress.refresh(selected);
+  };
+
   viewport.addEventListener('scroll', update, { passive: true });
-  dots.forEach((button, index) => button.addEventListener('click', () => scrollToSlide(index)));
-  thumbs.forEach((button, index) => button.addEventListener('click', () => scrollToSlide(index)));
+  dots.forEach((button, index) =>
+    button.addEventListener('click', () => {
+      pauseAutoplay();
+      scrollToSlide(index);
+      resetAutoplay();
+    }),
+  );
+  thumbs.forEach((button, index) =>
+    button.addEventListener('click', () => {
+      pauseAutoplay();
+      scrollToSlide(index);
+      resetAutoplay();
+    }),
+  );
   wrapper.querySelector('[data-sw-carousel-previous]')?.addEventListener('click', (event) => {
     event.preventDefault();
+    pauseAutoplay();
     scrollToSlide(selected - 1);
+    resetAutoplay();
   });
   wrapper.querySelector('[data-sw-carousel-next]')?.addEventListener('click', (event) => {
     event.preventDefault();
+    pauseAutoplay();
     scrollToSlide(selected + 1);
+    resetAutoplay();
   });
   viewport.tabIndex = 0;
   viewport.addEventListener('keydown', (event) => {
     if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
       event.preventDefault();
+      pauseAutoplay();
       scrollToSlide(selected + (event.key === 'ArrowRight' ? 1 : -1));
+      resetAutoplay();
     }
+  });
+  wrapper.addEventListener('mouseenter', pauseAutoplay);
+  wrapper.addEventListener('mouseleave', resetAutoplay);
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) pauseAutoplay();
+    else resetAutoplay();
   });
   wrapper.dataset.heroEmblaInited = 'true';
   update();
+  resetAutoplay();
 }
 
 function initHeroCarousels(root: ParentNode = document) {
@@ -298,7 +364,7 @@ function initHeroCarousels(root: ParentNode = document) {
 
   if (!wraps.length) return;
 
-  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const reducedMotion = prefersReducedMotion();
 
   wraps.forEach((wrapper) => {
     try {
@@ -352,16 +418,24 @@ function initHeroCarousels(root: ParentNode = document) {
 
       const progress = bindHeroDots(wrapper, api, autoplay);
       bindHeroThumbs(wrapper, api);
+
       const resetAutoplayTimer = () => {
-        if (autoplay && !reducedMotion && autoplay.isPlaying()) autoplay.reset();
+        if (!autoplay || reducedMotion) return;
+        if (autoplay.isPlaying()) autoplay.stop();
+        progress.setAutoplayPaused(true);
+        autoplay.reset();
+        if (!document.hidden) autoplay.play();
+        progress.setAutoplayPaused(false);
+        progress.refresh(api.selectedScrollSnap());
       };
+
       bindArrows(carouselRoot, api, resetAutoplayTimer);
       bindHeroSlideImages(viewport);
       bindDragUX(viewport, api);
       bindHeroKeyboard(wrapper, api, resetAutoplayTimer);
 
       if (autoplay) {
-        bindHeroAutoplayPause(wrapper, autoplay, reducedMotion);
+        bindHeroAutoplayPause(wrapper, autoplay, reducedMotion, progress);
       }
 
       api.on('destroy', progress.stop);
@@ -375,7 +449,7 @@ function initHeroCarousels(root: ParentNode = document) {
         return;
       }
 
-      if (!reducedMotion && !document.hidden) {
+      if (!document.hidden) {
         autoplay.play();
       }
     } catch (error) {

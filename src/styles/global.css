@@ -851,23 +851,23 @@ html:not(.dark) .deployment-status-strip__cta {
 
 
 .hero-embla-progress {
-  width: 100%;
-  transform: scaleX(0);
-  transform-origin: left center;
-  will-change: transform;
+  width: 0%;
+  height: 100%;
+  background: var(--primary);
+  will-change: width;
 }
 
-@keyframes hero-embla-progress {
+@keyframes hero-embla-progress-fill {
   from {
-    transform: scaleX(0);
+    width: 0%;
   }
   to {
-    transform: scaleX(1);
+    width: 100%;
   }
 }
 
 .hero-embla-progress--running {
-  animation: hero-embla-progress 4000ms linear forwards;
+  animation: hero-embla-progress-fill var(--hero-autoplay-ms, 5000ms) linear forwards;
 }
 
 .hero-embla-progress--running.hero-embla-progress--paused {
@@ -875,7 +875,7 @@ html:not(.dark) .deployment-status-strip__cta {
 }
 
 .hero-embla-progress--filled {
-  transform: scaleX(1);
+  width: 100%;
 }
 
 [data-hero-embla-viewport] {
@@ -928,7 +928,7 @@ html:not(.dark) .deployment-status-strip__cta {
   }
 
   .hero-embla-progress--filled {
-    transform: scaleX(1);
+    width: 100%;
   }
 }
 
@@ -981,9 +981,10 @@ html:not(.dark) .deployment-status-strip__cta {
 }
 .hero-embla-dot[data-active="true"] { min-width: 40px; }
 .hero-embla-dot .hero-embla-progress {
-  inset-block: 8px;
-  left: 8px;
-  width: calc(100% - 16px);
+  inset-block: 0;
+  left: 0;
+  height: 100%;
+  max-width: 100%;
 }
 .slide-reveal-btn--lg { --slide-reveal-icon: 2.75rem; }
 .slide-reveal-btn--sm { --slide-reveal-icon: 2rem; }
