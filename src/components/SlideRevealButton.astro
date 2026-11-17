@@ -1,0 +1,37 @@
+---
+import Icon from './icons/Icon.astro';
+import type { HTMLAttributes } from 'astro/types';
+import type { IconName } from './icons/types';
+import { isZadeyoHref, CHECKOUT_LINK_REL } from '../config/checkout';
+
+interface Props extends Omit<HTMLAttributes<'a'>, 'size'> {
+  size?: 'sm' | 'lg';
+  block?: boolean;
+  href: string;
+  class?: string;
+  ariaLabel?: string;
+  icon?: IconName;
+  scrollTarget?: string;
+}
+
+const { href, class: className, ariaLabel, scrollTarget, icon = 'arrowRight', size, block = false, ...rest } = Astro.props;
+const isCheckout = isZadeyoHref(href);
+---
+
+<a
+  {...rest}
+  href={href}
+  class:list={['slide-reveal-btn', size && `slide-reveal-btn--${size}`, block && 'slide-reveal-btn--block', className]}
+  aria-label={ariaLabel ?? rest['aria-label']}
+  data-scroll-target={scrollTarget}
+  {...(isCheckout
+    ? { rel: CHECKOUT_LINK_REL, 'data-astro-reload': true, 'data-astro-prefetch': 'false' }
+    : {})}
+>
+  <span class="slide-reveal-btn__icon" aria-hidden="true">
+    <Icon name={icon} size={18} class="slide-reveal-btn__svg" />
+  </span>
+  <span class="slide-reveal-btn__text">
+    <slot />
+  </span>
+</a>
