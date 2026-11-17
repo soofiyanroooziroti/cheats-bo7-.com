@@ -44,7 +44,7 @@ export function organizationSchema() {
     '@type': 'Organization',
     name: t.site.name,
     url: `${SITE_ORIGIN}/`,
-    logo: `${SITE_ORIGIN}/logo.webp`,
+    logo: `${SITE_ORIGIN}/bo7-logo-orange-512.webp`,
     hasMerchantReturnPolicy: merchantReturnPolicySchema(),
     ...(sameAs.length > 0 ? { sameAs } : {}),
     contactPoint: [
@@ -344,7 +344,7 @@ export function articleSchema(input: {
       name: t.site.name,
       logo: {
         '@type': 'ImageObject',
-        url: `${SITE_ORIGIN}/logo.webp`,
+        url: `${SITE_ORIGIN}/bo7-logo-orange-512.webp`,
       },
     },
     mainEntityOfPage: {
