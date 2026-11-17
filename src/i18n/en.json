@@ -574,25 +574,32 @@
         {
           "heading": "Information we collect",
           "paragraphs": [
-            "We may collect standard web analytics such as page views, device type, browser, and approximate region through Google Analytics when enabled. Checkout and license delivery happen on external checkout pages. We do not store payment card data on cheatsbo7.com."
+            "When Google Analytics is enabled, we receive aggregated usage signals such as page paths viewed, session duration, referrer URL, device category, browser family, operating system, and approximate region derived from IP. We do not use analytics to identify individual visitors by name. Checkout and license delivery happen on external checkout pages. We do not store payment card numbers, billing addresses, or wallet tokens on cheatsbo7.com.",
+            "If you open a Discord ticket linked from Support, you choose what to share. We typically see your Discord username or display name, the message text, any attachments you upload, and any order ID or license details you paste to speed up troubleshooting."
           ]
         },
         {
           "heading": "How we use data",
           "paragraphs": [
-            "Analytics help us understand which guides and product pages are useful so we can improve content and fix broken links. Support tickets may retain the Discord handle and message content you provide until the issue is resolved."
+            "Analytics help us understand which guides and product pages are useful so we can improve content, fix broken links, and prioritize status updates after game patches. Support messages are used only to answer setup, checkout, or license questions. We do not sell visitor lists or Discord handles to third-party marketers."
           ]
         },
         {
           "heading": "Cookies",
           "paragraphs": [
-            "We use minimal cookies required for analytics. You can block cookies in your browser settings; core site content remains accessible without them."
+            "We use cookies and similar storage mainly for analytics measurement when GA is active. These may include session identifiers and campaign parameters so repeat visits are counted correctly without storing passwords or payment data. You can block or delete cookies in your browser settings; core pages remain readable without them. Some checkout providers set their own cookies when you leave this site to pay, and those follow the provider’s notices."
+          ]
+        },
+        {
+          "heading": "Retention and removal",
+          "paragraphs": [
+            "Analytics aggregates are kept according to the analytics provider’s retention window. Discord support threads may be archived after a ticket is closed, but you can ask us to delete identifiable messages you sent if they are no longer needed for an open issue. To request removal, contact us through Support with the Discord account you used and the approximate date of the conversation. We will confirm what we can delete on our side and remind you that payment records may still exist with the external checkout provider."
           ]
         },
         {
           "heading": "Support",
           "paragraphs": [
-            "For privacy questions, use the options on the Support page. Purchase and refund rules are in our Terms & Conditions."
+            "For questions about this policy, use the options on the Support page. Purchase and refund rules are in our Terms & Conditions."
           ]
         }
       ]

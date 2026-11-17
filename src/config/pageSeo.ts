@@ -30,11 +30,11 @@ export const PAGE_SEO: Record<string, PageSeoEntry> = {
   },
   "/forum/": {
     "title": "Black Ops 7 Forum | Feature Discussions and PC Setup",
-    "description": "Browse example Black Ops 7 discussions about aiming, ESP, radar and Windows setup. Follow nested replies and linked guides for each product topic."
+    "description": "Forum: browse Black Ops 7 discussions about aiming, ESP, radar and Windows setup, with nested replies and linked guides."
   },
   "/faq/": {
     "title": "BO7 Product FAQ | Plans, PC Setup and RICOCHET Questions",
-    "description": "Find answers about BO7 product plans, checkout, Windows requirements and RICOCHET. Compare the loader, HWID spoofer and account appeal tool before buying."
+    "description": "FAQ: answers on BO7 plans, checkout, Windows requirements and RICOCHET. Compare the loader, HWID spoofer and appeal tool before buying."
   },
   "/support/": {
     "title": "BO7 Product Support | Windows PC Setup and Checkout Help",
@@ -46,7 +46,7 @@ export const PAGE_SEO: Record<string, PageSeoEntry> = {
   },
   "/privacy/": {
     "title": "Privacy Policy | BO7 Store Analytics and Checkout Data",
-    "description": "Read how cheatsbo7.com handles website analytics, cookies and support information. Payment details are handled by the external checkout provider."
+    "description": "Privacy: how this site handles analytics, cookies and support information. Payment details stay with the external checkout provider."
   },
   "/terms/": {
     "title": "Terms of Use | BO7 Store Licenses, Refunds and Purchases",
