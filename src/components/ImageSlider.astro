@@ -179,11 +179,7 @@ const imageWidths = isHero ? HERO_IMAGE_WIDTHS : undefined;
               aria-selected={i === 0 ? 'true' : 'false'}
               data-active={i === 0 ? 'true' : 'false'}
             >
-              <span
-                class="hero-embla-progress pointer-events-none absolute inset-y-0 left-0 rounded-full bg-primary"
-                data-hero-embla-progress
-                aria-hidden="true"
-              />
+              <span class="dot-fill" data-hero-embla-progress aria-hidden="true" />
             </button>
           ))}
         </div>

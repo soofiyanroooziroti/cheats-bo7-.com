@@ -850,14 +850,23 @@ html:not(.dark) .deployment-status-strip__cta {
 }
 
 
-.hero-embla-progress {
-  width: 0%;
+.hero-embla-dot .dot-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
   height: 100%;
+  width: 0;
+  border-radius: inherit;
   background: var(--primary);
+  pointer-events: none;
   will-change: width;
 }
 
-@keyframes hero-embla-progress-fill {
+.hero-embla-dot:not([data-active='true']) .dot-fill {
+  display: none;
+}
+
+@keyframes dot-fill-grow {
   from {
     width: 0%;
   }
@@ -866,16 +875,22 @@ html:not(.dark) .deployment-status-strip__cta {
   }
 }
 
-.hero-embla-progress--running {
-  animation: hero-embla-progress-fill var(--hero-autoplay-ms, 5000ms) linear forwards;
+.dot-fill.dot-fill--running {
+  animation: dot-fill-grow var(--hero-autoplay-ms, 5000ms) linear forwards;
 }
 
-.hero-embla-progress--running.hero-embla-progress--paused {
+.dot-fill.dot-fill--paused {
   animation-play-state: paused;
 }
 
-.hero-embla-progress--filled {
+.dot-fill.dot-fill--filled {
   width: 100%;
+  animation: none;
+}
+
+[data-hero-embla-wrap][data-hero-carousel-paused='true'] .dot-fill.dot-fill--running,
+[data-hero-embla-wrap]:hover .dot-fill.dot-fill--running {
+  animation-play-state: paused;
 }
 
 [data-hero-embla-viewport] {
@@ -923,11 +938,11 @@ html:not(.dark) .deployment-status-strip__cta {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero-embla-progress {
+  .dot-fill.dot-fill--running {
     animation: none !important;
   }
 
-  .hero-embla-progress--filled {
+  .dot-fill.dot-fill--filled {
     width: 100%;
   }
 }
@@ -974,17 +989,17 @@ html:not(.dark) .deployment-status-strip__cta {
   }
 }
 .hero-embla-dot {
+  position: relative;
+  overflow: hidden;
   min-width: 24px;
   min-height: 24px;
   border: 8px solid transparent;
   background-clip: padding-box;
+  background-color: color-mix(in oklch, var(--muted-foreground) 50%, transparent) !important;
 }
-.hero-embla-dot[data-active="true"] { min-width: 40px; }
-.hero-embla-dot .hero-embla-progress {
-  inset-block: 0;
-  left: 0;
-  height: 100%;
-  max-width: 100%;
+.hero-embla-dot[data-active="true"] {
+  min-width: 40px;
+  background-color: color-mix(in oklch, var(--muted-foreground) 55%, black) !important;
 }
 .slide-reveal-btn--lg { --slide-reveal-icon: 2.75rem; }
 .slide-reveal-btn--sm { --slide-reveal-icon: 2rem; }
